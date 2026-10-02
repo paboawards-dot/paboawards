@@ -38,13 +38,13 @@ export async function verifyAndApply(ref: string, opts: { throttleMs?: number } 
 
   let check;
   try {
-    check = await checkPayment(ref);
+    check = await checkPayment(ref, tx.country || "CI");
   } catch {
     return tx.status === "pending" ? "pending" : (tx.status as ApplyResult);
   }
 
   if (check.state === "accepted") {
-    const { data } = await db.rpc("confirm_transaction", { p_ref: ref, p_amount: check.amount, p_payload: check.raw as object });
+    const { data } = await db.rpc("confirm_transaction", { p_ref: ref, p_amount: check.amount ?? tx.amount, p_payload: check.raw as object });
     if (data === "confirmed") return "confirmed";
     if (data === "already") return "already";
     if (data === "amount_mismatch") return "flagged";

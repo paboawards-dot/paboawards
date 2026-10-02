@@ -15,7 +15,7 @@ export const METHODS: { id: PayMethod; name: string; short: string; color: strin
 ];
 
 /** Pays de la zone FCFA (XOF) — l'activation par pays dépend de votre compte CinetPay. */
-export const COUNTRIES: { code: string; name: string; flag: string; dial: string; lengths: number[]; example: string }[] = [
+const ALL_COUNTRIES: { code: string; name: string; flag: string; dial: string; lengths: number[]; example: string }[] = [
   { code: "CI", name: "Côte d’Ivoire", flag: "🇨🇮", dial: "225", lengths: [10], example: "07 00 00 00 00" },
   { code: "BF", name: "Burkina Faso", flag: "🇧🇫", dial: "226", lengths: [8], example: "70 00 00 00" },
   { code: "ML", name: "Mali", flag: "🇲🇱", dial: "223", lengths: [8], example: "70 00 00 00" },
@@ -25,7 +25,12 @@ export const COUNTRIES: { code: string; name: string; flag: string; dial: string
   { code: "NE", name: "Niger", flag: "🇳🇪", dial: "227", lengths: [8], example: "90 00 00 00" },
 ];
 
-export const MAX_VOTES_HARD_LIMIT = 1_000_000;
+/** Pays réellement activés (un compte CinetPay = un pays). Par défaut : Côte d'Ivoire seulement. */
+const ENABLED = (process.env.NEXT_PUBLIC_ENABLED_COUNTRIES || "CI").split(",").map((x) => x.trim().toUpperCase()).filter(Boolean);
+export const COUNTRIES = ALL_COUNTRIES.filter((c) => ENABLED.includes(c.code));
+
+/** CinetPay accepte au maximum 2 500 000 FCFA par paiement → 25 000 votes. */
+export const MAX_VOTES_HARD_LIMIT = 25_000;
 
 export function siteUrl(): string {
   const u = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") || "http://localhost:3000";
