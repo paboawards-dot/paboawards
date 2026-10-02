@@ -60,7 +60,7 @@ async function getToken(country: string, force = false): Promise<string> {
   if (!force && cached && cached.exp > Date.now() + 60_000) return cached.token;
   const r = await http("POST", `${baseUrl(c.key)}/v1/oauth/login`, { api_key: c.key, api_password: c.password });
   const token = r.json?.access_token;
-  if (!token) throw new Error("auth_failed");
+  if (!token) throw new Error(`auth_failed http=${r.http} ${JSON.stringify(r.json).slice(0, 300)}`);
   tokens.set(country, { token, exp: Date.now() + (Number(r.json?.expires_in) || 3600) * 1000 });
   return token;
 }
@@ -116,8 +116,13 @@ export async function initPayment(a: InitArgs): Promise<InitResult> {
   };
 
   // 1er essai avec l'opérateur choisi ; si CinetPay le refuse, 2e essai : l'utilisateur choisira sur la page CinetPay.
-  let res = parse((await call(country, "POST", "/v1/payment", build(true))).json);
-  if (!res.ok) res = parse((await call(country, "POST", "/v1/payment", build(false))).json);
+  const r1 = await call(country, "POST", "/v1/payment", build(true));
+  let res = parse(r1.json);
+  if (!res.ok) {
+    const r2 = await call(country, "POST", "/v1/payment", build(false));
+    res = parse(r2.json);
+    if (!res.ok) res = { ok: false, raw: { essai1: { http: r1.http, reponse: r1.json }, essai2: { http: r2.http, reponse: r2.json } } };
+  }
   return res;
 }
 
