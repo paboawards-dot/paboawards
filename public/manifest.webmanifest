@@ -1,0 +1,22 @@
+{
+  "name": "PABO AWARDS — Prix de l’Art du Bounkani",
+  "short_name": "PABO AWARDS",
+  "description": "Vote pour ton artiste du Bounkani. La voix du public. Le talent du Bounkani.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#06040c",
+  "theme_color": "#06040c",
+  "categories": ["entertainment", "music"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Voter", "short_name": "Voter", "url": "/voter", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Classement", "short_name": "Classement", "url": "/classement", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
