@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { COUNTRIES, METHODS, PACKS } from "@/lib/config";
+import { COUNTRIES, MAX_VOTES_HARD_LIMIT, METHODS, PACKS } from "@/lib/config";
 import { fcfa, num } from "@/lib/format";
 import type { PayMethod } from "@/lib/types";
 import { PayLogo } from "./PayLogo";
@@ -53,7 +53,7 @@ export function VoteWizard({ candidate, category, unitPrice, maxVotes }: Props) 
   const country = COUNTRIES.find((c) => c.code === countryCode) || COUNTRIES[0];
   const m = METHODS.find((x) => x.id === method) || null;
   const amount = votes * unitPrice;
-  const limit = maxVotes || 1_000_000;
+  const limit = Math.min(maxVotes || MAX_VOTES_HARD_LIMIT, MAX_VOTES_HARD_LIMIT);
   const votesOk = Number.isInteger(votes) && votes >= 1 && votes <= limit;
   const phoneOk = country.lengths.includes(phone.length);
   const packs = useMemo(() => PACKS.filter((p) => p <= limit), [limit]);
@@ -156,7 +156,7 @@ export function VoteWizard({ candidate, category, unitPrice, maxVotes }: Props) 
             <div className="mt-5 rounded-2xl bg-gradient-to-r from-violet/40 to-electric/40 p-4 text-center">
               <p className="text-sm font-bold uppercase tracking-widest text-white/80">Tu paies</p>
               <p className="font-title text-6xl text-gold-grad">{votesOk ? fcfa(amount) : "—"}</p>
-              {maxVotes && <p className="text-xs text-white/60">Maximum {num(maxVotes)} votes par paiement</p>}
+              {votes >= limit && <p className="text-xs text-white/60">Maximum {num(limit)} votes par paiement</p>}
             </div>
             <button type="button" className="btn-vote mt-5 w-full" disabled={!votesOk} onClick={() => setStep(1)}>Suivant →</button>
           </section>
