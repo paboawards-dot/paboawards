@@ -91,8 +91,8 @@ export async function POST(req: Request) {
       notifyUrl: `${base}/api/cinetpay/notify`,
       returnUrl: `${base}/carte/${ref}`,
     });
-  } catch {
-    res = { ok: false as const, raw: { error: "network" } };
+  } catch (e: any) {
+    res = { ok: false as const, raw: { error: String(e?.message || e).slice(0, 500) } };
   }
   if (!res.ok || !res.paymentUrl) {
     await db.from("transactions").update({ status: "failed", provider_payload: (res.raw || null) as any }).eq("ref", ref);
