@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   if (body?.hp) return fail("invalid"); // pot de miel anti-robots
 
   const db = serviceClient();
-  if (!db || !cinetpayConfigured()) return fail("service", 503);
+  if (!db) return fail("service", 503);
 
   // ---- Validation stricte côté serveur (rien n'est cru venant du navigateur)
   const candidateId = String(body?.candidateId || "");
@@ -45,6 +45,8 @@ export async function POST(req: Request) {
   if (!Number.isInteger(votes) || votes < 1 || votes > MAX_VOTES_HARD_LIMIT) return fail("invalid");
   if (!METHODS.some((m) => m.id === method)) return fail("invalid");
   if (!country || !country.lengths.includes(digits.length)) return fail("phone");
+
+  if (!cinetpayConfigured(country.code)) return fail("service", 503);
 
   const { data: settings } = await db.from("settings").select("*").eq("id", 1).maybeSingle();
   const s = settings as Settings | null;
@@ -96,6 +98,6 @@ export async function POST(req: Request) {
     await db.from("transactions").update({ status: "failed", provider_payload: (res.raw || null) as any }).eq("ref", ref);
     return fail("provider", 502);
   }
-  await db.from("transactions").update({ payment_url: res.paymentUrl }).eq("ref", ref);
+  await db.from("transactions").update({ payment_url: res.paymentUrl, notify_token: res.notifyToken || null, provider_ref: res.providerId || null }).eq("ref", ref);
   return NextResponse.json({ ok: true, ref, paymentUrl: res.paymentUrl });
 }
