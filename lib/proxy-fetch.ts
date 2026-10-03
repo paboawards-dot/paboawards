@@ -65,7 +65,6 @@ export function fetchViaProxy(
           method,
           path: target.pathname + target.search,
           headers: { ...headers, ...(payload ? { "Content-Length": String(payload.length) } : {}) },
-          agent: false,
           createConnection: () => tls.connect({ socket, servername: target.hostname }),
         },
         (res) => {
