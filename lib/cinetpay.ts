@@ -6,6 +6,7 @@
  *  Sandbox (clé sk_test_…) : https://api.cinetpay.net  ·  Réel (clé sk_live_…) : https://api.cinetpay.co
  */
 import { COUNTRIES } from "./config";
+import { fetchViaProxy, proxyConfigured } from "./proxy-fetch";
 
 type Creds = { key: string; password: string };
 
@@ -30,20 +31,25 @@ function baseUrl(key: string): string {
 type HttpResult = { http: number; json: any };
 
 async function http(method: "GET" | "POST", url: string, body?: unknown, token?: string): Promise<HttpResult> {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+  const payload = body ? JSON.stringify(body) : undefined;
+
+  // Passage par le proxy à IP fixe (liste blanche IP de CinetPay) si CINETPAY_PROXY_URL est défini
+  if (proxyConfigured()) {
+    const r = await fetchViaProxy(method, url, headers, payload, 15000);
+    let json: any = {};
+    try { json = JSON.parse(r.text); } catch { /* réponse non JSON */ }
+    return { http: r.status, json };
+  }
+
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), 15000);
   try {
-    const r = await fetch(url, {
-      method,
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: body ? JSON.stringify(body) : undefined,
-      cache: "no-store",
-      signal: ctl.signal,
-    });
+    const r = await fetch(url, { method, headers, body: payload, cache: "no-store", signal: ctl.signal });
     const json = await r.json().catch(() => ({}));
     return { http: r.status, json };
   } finally {
