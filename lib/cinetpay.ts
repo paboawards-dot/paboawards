@@ -146,3 +146,15 @@ export async function checkPayment(ref: string, country = "CI"): Promise<CheckRe
   if (status === "FAILED" || status === "INSUFFICIENT_BALANCE") return { state: "refused", raw: j };
   return { state: "pending", raw: j };
 }
+
+/** Outil de diagnostic (admin) : tente la connexion CinetPay et renvoie un résultat sans aucun secret. */
+export async function testLogin(country = "CI"): Promise<{ ok: boolean; http: number; code?: unknown; status?: unknown; description?: unknown; error?: string }> {
+  const c = credsFor(country);
+  if (!c) return { ok: false, http: 0, error: "Clé ou mot de passe API absents dans Vercel" };
+  try {
+    const r = await http("POST", `${baseUrl(c.key)}/v1/oauth/login`, { api_key: c.key, api_password: c.password });
+    return { ok: !!r.json?.access_token, http: r.http, code: r.json?.code, status: r.json?.status, description: r.json?.description };
+  } catch (e: any) {
+    return { ok: false, http: 0, error: String(e?.message || e).slice(0, 200) };
+  }
+}
